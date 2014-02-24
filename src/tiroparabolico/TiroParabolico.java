@@ -8,7 +8,8 @@ package tiroparabolico;
 
 /**
  *
- * @author LuisJuan
+ * @author Luis Juan A1183634
+ * @author Alfredo Hinojosa A01036053
  */
 public class TiroParabolico {
 
