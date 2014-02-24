@@ -7,9 +7,9 @@
 package tiroparabolico;
 
 /**
- *
- * @author Luis Juan A1183634
- * @author Alfredo Hinojosa A01036053
+ * OTRO MEME
+ * @author Luis Juan Sanchez A1183634
+ * @author Alfredo Hinojosa Huerta A01036053
  */
 public class TiroParabolico {
 
