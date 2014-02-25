@@ -1,23 +1,31 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @author Luis Juan Sanchez A01183634
+ * @author Alfredo Hinojosa Huerta A01036053
+ * @version 1.00 02/24/2014
  */
-
 package tiroparabolico;
 
-/**
- * OTRO MEME2
- * @author Luis Juan Sanchez A1183634
- * @author Alfredo Hinojosa Huerta A01036053
- */
-public class TiroParabolico {
+import javax.swing.JFrame;
+import java.awt.Image;
 
+public class TiroParabolico extends JFrame {
+
+    private Image background; // Imagen de fondo de JFrame
+    
     /**
-     * @param args the command line arguments
+     * Constructor
+     * Se inicializan las variables
      */
+    public TiroParabolico() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1200, 750);
+        setTitle("NBA Series!");
+        
+    }
+    
     public static void main(String[] args) {
-        // TODO code application logic here
+        TiroParabolico tiro = new TiroParabolico();
+        tiro.setVisible(true);
     }
     
 }
