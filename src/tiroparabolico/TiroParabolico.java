@@ -7,7 +7,7 @@
 package tiroparabolico;
 
 /**
- * OTRO MEME
+ * OTRO MEME2
  * @author Luis Juan Sanchez A1183634
  * @author Alfredo Hinojosa Huerta A01036053
  */
