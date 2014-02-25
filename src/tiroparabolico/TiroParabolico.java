@@ -10,10 +10,10 @@ import java.awt.Image;
 
 public class TiroParabolico extends JFrame {
 
-    private Image background; // Imagen de fondo de JFrame
+    private Image background; // Imagen de fondo de JFrame <-- Agregar Imagen
     
     /**
-     * Constructor
+     * Constructor.
      * Se inicializan las variables
      */
     public TiroParabolico() {
