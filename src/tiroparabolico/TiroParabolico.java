@@ -29,8 +29,9 @@ public class TiroParabolico extends JFrame implements Runnable {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1008, 758);
         setTitle("NBA Series!");
-        bVelx = 0;
-        bVely = 1;
+        bVelx = (int) (Math.random() * 9 + 1);
+        bVely = (int) (Math.random() * 13 + 10);
+        bVely *= -1;
         background = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/nba.jpg"));
 
         // Carga las imagenes de la animacion del balon
@@ -43,12 +44,12 @@ public class TiroParabolico extends JFrame implements Runnable {
 
         // Se crea la animacion del balon
         animBalon = new Animacion();
-        animBalon.sumaCuadro(b0, 200);
-        animBalon.sumaCuadro(b1, 200);
-        animBalon.sumaCuadro(b2, 200);
-        animBalon.sumaCuadro(b3, 200);
-        animBalon.sumaCuadro(b4, 200);
         animBalon.sumaCuadro(b5, 200);
+        animBalon.sumaCuadro(b4, 200);
+        animBalon.sumaCuadro(b3, 200);
+        animBalon.sumaCuadro(b2, 200);
+        animBalon.sumaCuadro(b1, 200);
+        animBalon.sumaCuadro(b0, 200);
 
         // Balon
         balon = new Balon(100, 300, animBalon);
@@ -69,7 +70,7 @@ public class TiroParabolico extends JFrame implements Runnable {
             actualiza();
             repaint();
             try {
-                Thread.sleep(20);
+                Thread.sleep(100);
             } catch (InterruptedException ex) {
                 System.out.println("Error en " + ex.toString());
             }
@@ -80,12 +81,18 @@ public class TiroParabolico extends JFrame implements Runnable {
      * En este metodo se actualiza..
      */
     public void actualiza() {
-        balon.setPosY(balon.getPosY() + 1);
+        balon.setPosY(balon.getPosY() + bVely);
+        bVely++;
+        balon.setPosX(balon.getPosX() + bVelx);
         long tiempoTranscurrido = System.currentTimeMillis() - tiempoActual;
         tiempoActual += tiempoTranscurrido;
         balon.getAnimacion().actualiza(tiempoTranscurrido);
     }
 
+    
+    checaColision(){
+        
+    }
     /**
      * Metodo que actualiza las animaciones
      *
