@@ -8,7 +8,6 @@ package tiroparabolico;
 
 import java.awt.Image;
 import javax.swing.ImageIcon;
-import java.awt.Image;
 import java.awt.Rectangle;
 
 public class Base {
