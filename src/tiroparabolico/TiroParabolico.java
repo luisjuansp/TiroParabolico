@@ -16,7 +16,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class TiroParabolico extends JFrame implements Runnable, MouseListener, KeyListener {
-    
+
     private Animacion animBalon; // Animacion del balon
     private Animacion cuadroCanasta; // Animacion de la canasta
     private Balon balon; // Objeto de la clase balon
@@ -28,7 +28,9 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     private Graphics dbg; // Objeto Grafico
     private int bVelx; // Velocidad en X del balon
     private int bVely; // Velocidad en Y del balon
-    private int cMovx; // Velocidad en X del balon
+    private int cMovx; // Movimiento en X de la canasta
+    private int grav; // Gravedad
+    private double bAng; // Angulo de la velocidad del balon
     private boolean click; // Booleano de click
     private boolean pausa; // Booleano de pausa
 
@@ -43,6 +45,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         setTitle("NBA Series!");
         bVelx = 0;
         bVely = 0;
+        grav = 1;
         background = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/nba.jpg"));
 
         // Carga las imagenes de la animacion del balon
@@ -62,7 +65,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         animBalon.sumaCuadro(b2, 200);
         animBalon.sumaCuadro(b1, 200);
         animBalon.sumaCuadro(b0, 200);
-        
+
         cuadroCanasta = new Animacion();
         cuadroCanasta.sumaCuadro(c, 200);
 
@@ -102,11 +105,11 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     public void actualiza() {
         balon.setPosY(balon.getPosY() - bVely);
         if (click) {
-            bVely--;
+            bVely -= grav;
         }
         balon.setPosX(balon.getPosX() + bVelx);
         canasta.setPosX(canasta.getPosX() + cMovx);
-        cMovx=0;
+        cMovx = 0;
         long tiempoTranscurrido = System.currentTimeMillis() - tiempoActual;
         tiempoActual += tiempoTranscurrido;
         balon.getAnimacion().actualiza(tiempoTranscurrido);
@@ -124,7 +127,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
             balon.setPosY(300);
             click = false;
         }
-        if (canasta.getPerimetro().intersects(balon.getPerimetro())){
+        if (canasta.getPerimetro().intersects(balon.getPerimetro())) {
             bVelx = 0;
             bVely = 0;
             balon.setPosX(100);
@@ -177,7 +180,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      * @param e
      */
     public void mouseReleased(MouseEvent e) {
-        
+
     }
 
     /**
@@ -188,8 +191,9 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (!click) {
             if (balon.getPerimetro().contains(e.getPoint())) {
                 click = true;
-                bVelx = (int) (Math.random() * 5 + 9);
-                bVely = (int) (Math.random() * 13 + 10);
+                bAng = (Math.random() * 60) + 15;
+                bVely = (int) (Math.sqrt(250 * 2 * grav));
+                bVelx = (int) ((650 * grav) / (bVely * 2));
             }
         }
     }
@@ -199,7 +203,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      * @param e
      */
     public void mousePressed(MouseEvent e) {
-        
+
     }
 
     /**
@@ -207,7 +211,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      * @param e
      */
     public void mouseEntered(MouseEvent e) {
-        
+
     }
 
     /**
@@ -215,7 +219,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      * @param e
      */
     public void mouseExited(MouseEvent e) {
-        
+
     }
 
     /**
@@ -223,19 +227,19 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      * @param e
      */
     public void keyPressed(KeyEvent e) {
-        
+
         if (e.getKeyCode() == KeyEvent.VK_P) {
             pausa = !pausa;
         }
-        
+
         if (e.getKeyCode() == KeyEvent.VK_LEFT) {
             cMovx = -15;
         }
-        
+
         if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
             cMovx = 15;
         }
-        
+
     }
 
     /**
@@ -243,7 +247,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      * @param e
      */
     public void keyReleased(KeyEvent e) {
-        
+
     }
 
     /**
@@ -251,12 +255,12 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      * @param e
      */
     public void keyTyped(KeyEvent e) {
-        
+
     }
-    
+
     public static void main(String[] args) {
         TiroParabolico tiro = new TiroParabolico();
         tiro.setVisible(true);
     }
-    
+
 }
