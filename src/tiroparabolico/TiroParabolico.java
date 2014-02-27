@@ -9,29 +9,40 @@ import javax.swing.JFrame;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
-public class TiroParabolico extends JFrame implements Runnable {
-
+public class TiroParabolico extends JFrame implements Runnable, MouseListener, KeyListener {
+    
     private Animacion animBalon; // Animacion del balon
+    private Animacion cuadroCanasta; // Animacion de la canasta
     private Balon balon; // Objeto de la clase balon
+    private Canasta canasta; // Objeto de la clase Canasta
     private long tiempoActual;  // tiempo actual
     private long tiempoInicial; // tiempo inicial
     private Image background; // Imagen de fondo de JFrame <-- Agregar Imagen
     private Image dbImage; // Imagen
     private Graphics dbg; // Objeto Grafico
-    private int bVelx; // Posicion en X del balon
-    private int bVely; // Posicion en Y del balon
+    private int bVelx; // Velocidad en X del balon
+    private int bVely; // Velocidad en Y del balon
+    private int cMovx; // Velocidad en X del balon
+    private boolean click; // Booleano de click
+    private boolean pausa; // Booleano de pausa
 
     /**
      * Constructor Se inicializan las variables
      */
     public TiroParabolico() {
+        pausa = false;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1008, 758);
+        click = false;
         setTitle("NBA Series!");
-        bVelx = (int) (Math.random() * 9 + 1);
-        bVely = (int) (Math.random() * 13 + 10);
-        bVely *= -1;
+        bVelx = 0;
+        bVely = 0;
         background = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/nba.jpg"));
 
         // Carga las imagenes de la animacion del balon
@@ -41,6 +52,7 @@ public class TiroParabolico extends JFrame implements Runnable {
         Image b3 = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/b3.png"));
         Image b4 = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/b4.png"));
         Image b5 = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/b5.png"));
+        Image c = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/canasta.png"));
 
         // Se crea la animacion del balon
         animBalon = new Animacion();
@@ -50,10 +62,17 @@ public class TiroParabolico extends JFrame implements Runnable {
         animBalon.sumaCuadro(b2, 200);
         animBalon.sumaCuadro(b1, 200);
         animBalon.sumaCuadro(b0, 200);
+        
+        cuadroCanasta = new Animacion();
+        cuadroCanasta.sumaCuadro(c, 200);
 
         // Balon
         balon = new Balon(100, 300, animBalon);
 
+        //Canasta
+        canasta = new Canasta(900, 680, cuadroCanasta);
+        addMouseListener(this);
+        addKeyListener(this);
         Thread th = new Thread(this);
         th.start();
     }
@@ -66,11 +85,11 @@ public class TiroParabolico extends JFrame implements Runnable {
         // Guarda el tiempo actual del sistema
         tiempoActual = System.currentTimeMillis();
         while (true) {
-            //checaColision();
+            checaColision();
             actualiza();
             repaint();
             try {
-                Thread.sleep(100);
+                Thread.sleep(50);
             } catch (InterruptedException ex) {
                 System.out.println("Error en " + ex.toString());
             }
@@ -81,18 +100,39 @@ public class TiroParabolico extends JFrame implements Runnable {
      * En este metodo se actualiza..
      */
     public void actualiza() {
-        balon.setPosY(balon.getPosY() + bVely);
-        bVely++;
+        balon.setPosY(balon.getPosY() - bVely);
+        if (click) {
+            bVely--;
+        }
         balon.setPosX(balon.getPosX() + bVelx);
+        canasta.setPosX(canasta.getPosX() + cMovx);
+        cMovx=0;
         long tiempoTranscurrido = System.currentTimeMillis() - tiempoActual;
         tiempoActual += tiempoTranscurrido;
         balon.getAnimacion().actualiza(tiempoTranscurrido);
     }
 
-    
-    checaColision(){
-        
+    /**
+     *
+     */
+    public void checaColision() {
+        Rectangle cuadro = new Rectangle(0, 0, this.getWidth(), this.getHeight());
+        if (!cuadro.intersects(balon.getPerimetro())) {
+            bVelx = 0;
+            bVely = 0;
+            balon.setPosX(100);
+            balon.setPosY(300);
+            click = false;
+        }
+        if (canasta.getPerimetro().intersects(balon.getPerimetro())){
+            bVelx = 0;
+            bVely = 0;
+            balon.setPosX(100);
+            balon.setPosY(300);
+            click = false;
+        }
     }
+
     /**
      * Metodo que actualiza las animaciones
      *
@@ -127,11 +167,96 @@ public class TiroParabolico extends JFrame implements Runnable {
         if (balon.getAnimacion() != null) {
             g.drawImage(balon.animacion.getImagen(), balon.getPosX(), balon.getPosY(), this);
         }
+        if (canasta.getAnimacion() != null) {
+            g.drawImage(canasta.animacion.getImagen(), canasta.getPosX(), canasta.getPosY(), this);
+        }
     }
 
+    /**
+     *
+     * @param e
+     */
+    public void mouseReleased(MouseEvent e) {
+        
+    }
+
+    /**
+     *
+     * @param e
+     */
+    public void mouseClicked(MouseEvent e) {
+        if (!click) {
+            if (balon.getPerimetro().contains(e.getPoint())) {
+                click = true;
+                bVelx = (int) (Math.random() * 5 + 9);
+                bVely = (int) (Math.random() * 13 + 10);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param e
+     */
+    public void mousePressed(MouseEvent e) {
+        
+    }
+
+    /**
+     *
+     * @param e
+     */
+    public void mouseEntered(MouseEvent e) {
+        
+    }
+
+    /**
+     *
+     * @param e
+     */
+    public void mouseExited(MouseEvent e) {
+        
+    }
+
+    /**
+     *
+     * @param e
+     */
+    public void keyPressed(KeyEvent e) {
+        
+        if (e.getKeyCode() == KeyEvent.VK_P) {
+            pausa = !pausa;
+        }
+        
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            cMovx = -15;
+        }
+        
+        if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            cMovx = 15;
+        }
+        
+    }
+
+    /**
+     *
+     * @param e
+     */
+    public void keyReleased(KeyEvent e) {
+        
+    }
+
+    /**
+     *
+     * @param e
+     */
+    public void keyTyped(KeyEvent e) {
+        
+    }
+    
     public static void main(String[] args) {
         TiroParabolico tiro = new TiroParabolico();
         tiro.setVisible(true);
     }
-
+    
 }
