@@ -125,9 +125,9 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Se ejecuta el Thread, el juego no continua si la pausa esta activada.
-     * El juego finaliza si el numero de vidas en menor o igual que 0.
-     * El juego tambien se pausa si el usuario desea ver las instrucciones.
+     * Se ejecuta el Thread, el juego no continua si la pausa esta activada. El
+     * juego finaliza si el numero de vidas en menor o igual que 0. El juego
+     * tambien se pausa si el usuario desea ver las instrucciones.
      */
     public void run() {
 
@@ -217,6 +217,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
 
     /**
      * Evento que inicia el movimiento random del balon usando la bandera click.
+     *
      * @param e Evento
      */
     public void mouseClicked(MouseEvent e) {
@@ -247,8 +248,9 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     /**
      * Este evento se carga de activar la pausa al presionar la tecla P. Las
      * flechas de izquierda y derecha funcionan para darle la direccion correta
-     * a la canasta. La tecla I sirve para desplegar las instrucciones. Las teclas
-     * C y G se encargan de cargar y guardar el archivo "SaveState.txt"
+     * a la canasta. La tecla I sirve para desplegar las instrucciones. Las
+     * teclas C y G se encargan de cargar y guardar el archivo "SaveState.txt"
+     *
      * @param e Evento
      */
     public void keyPressed(KeyEvent e) {
@@ -268,31 +270,31 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (e.getKeyCode() == KeyEvent.VK_S) {
             mute = !mute;
         }
-        
+
         if (e.getKeyCode() == KeyEvent.VK_I) {
             instruc = !instruc;
         }
 
         if (e.getKeyCode() == KeyEvent.VK_G) {
-            if(!instruc) {
-               try {
-                writeFile();
-            } catch (IOException err) {
+            if (!instruc) {
+                try {
+                    writeFile();
+                } catch (IOException err) {
 
-            } 
+                }
             }
-            
+
         }
 
         if (e.getKeyCode() == KeyEvent.VK_C) {
             if (!instruc) {
                 try {
-                readFile();
-            } catch (IOException err) {
+                    readFile();
+                } catch (IOException err) {
 
+                }
             }
-            }
-            
+
         }
 
     }
@@ -306,8 +308,9 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Lee el archivo "SaveState.txt" y carga los valores de ese archivo
-     * en el juego actual.
+     * Lee el archivo "SaveState.txt" y carga los valores de ese archivo en el
+     * juego actual.
+     *
      * @throws IOException
      */
     public void readFile() throws IOException {
@@ -316,7 +319,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         } catch (FileNotFoundException e) {
             System.out.println("Error: " + e);
         }
-        
+
         datos = fileIn.readLine();
         arr = datos.split("_");
         pausa = Boolean.valueOf(arr[0]);
@@ -338,8 +341,8 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Escribe en el archivo "SaveState.txt" los valores actuales
-     * del juego.
+     * Escribe en el archivo "SaveState.txt" los valores actuales del juego.
+     *
      * @throws IOException
      */
     public void writeFile() throws IOException {
@@ -351,10 +354,10 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         fileOut.close();
 
     }
-    
-    
+
     /**
      * Metodo que actualiza las animaciones.
+     *
      * @param g es la imagen del objeto
      */
     public void paint(Graphics g) {
@@ -377,8 +380,9 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Este metodo se encarga de pintar todos los objetos graficos del juego.
-     * Se pintan los valores desplegados en el tablero
+     * Este metodo se encarga de pintar todos los objetos graficos del juego. Se
+     * pintan los valores desplegados en el tablero
+     *
      * @param g objeto grafico
      */
     public void paint1(Graphics g) {
@@ -389,7 +393,6 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (canasta.getAnimacion() != null) {
             g.drawImage(canasta.animacion.getImagen(), canasta.getPosX(), canasta.getPosY(), this);
         }
-        
 
         //-----IMPRESION DEL TABLERO
         g.setFont(myFont); // Aplica el estilo fuente a las string
@@ -401,7 +404,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (pausa) {
             g.drawString("P", 943, 178);
         }
-        
+
         if (instruc) {
             g.drawImage(ins, 0, 0, this);
         }
@@ -410,6 +413,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         }
 
     }
+
     public static void main(String[] args) {
         TiroParabolico tiro = new TiroParabolico();
         tiro.setVisible(true);
