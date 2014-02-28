@@ -5,6 +5,7 @@
  */
 package tiroparabolico;
 
+import java.awt.Color;
 import javax.swing.JFrame;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -14,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.Font;
 
 public class TiroParabolico extends JFrame implements Runnable, MouseListener, KeyListener {
 
@@ -33,16 +35,29 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     private double bAng; // Angulo de la velocidad del balon
     private boolean click; // Booleano de click
     private boolean pausa; // Booleano de pausa
+    private boolean mute; // Control de sonidos
+    private int score; // Puntaje del juego
+    private int lives; // Vidas del jugador
+    private int fouls; // Errores del jugador
+    private Font myFont;
+    private SoundClip fail;
+    private SoundClip goal;
+    private SoundClip over;
 
     /**
      * Constructor Se inicializan las variables
      */
     public TiroParabolico() {
+        myFont = new Font("Serif", Font.BOLD, 30); // Estilo de fuente
         pausa = false;
+        mute = false;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1008, 758);
         click = false;
         setTitle("NBA Series!");
+        score = 0;
+        lives = 5;
+        fouls = 3;
         bVelx = 0;
         bVely = 0;
         grav = 1;
@@ -66,6 +81,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         animBalon.sumaCuadro(b1, 200);
         animBalon.sumaCuadro(b0, 200);
 
+        // Se crea la animacion de la canasta
         cuadroCanasta = new Animacion();
         cuadroCanasta.sumaCuadro(c, 200);
 
@@ -74,6 +90,12 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
 
         //Canasta
         canasta = new Canasta(900, 680, cuadroCanasta);
+        
+        // Se cargan los sonidos
+        fail = new SoundClip("sounds/boing2.wav");
+        goal = new SoundClip("sounds/bloop_x.wav");
+        over = new SoundClip("sounds/buzzer_x.wav");
+        
         addMouseListener(this);
         addKeyListener(this);
         Thread th = new Thread(this);
@@ -81,16 +103,19 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Se ejecuta el Thread
+     * Se ejecuta el Thread, el juego no continua si la pausa esta
+     * activada.
      */
     public void run() {
 
         // Guarda el tiempo actual del sistema
         tiempoActual = System.currentTimeMillis();
         while (true) {
-            checaColision();
-            actualiza();
-            repaint();
+            if(!pausa){
+               checaColision();
+               actualiza();
+            }
+            repaint(); 
             try {
                 Thread.sleep(50);
             } catch (InterruptedException ex) {
@@ -100,11 +125,12 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * En este metodo se actualiza..
+     * En este metodo se actualiza las posiciones del balon y de la
+     * canasta.
      */
     public void actualiza() {
         balon.setPosY(balon.getPosY() - bVely);
-        if (click) {
+        if (click) { 
             bVely -= grav;
         }
         balon.setPosX(balon.getPosX() + bVelx);
@@ -116,29 +142,47 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     *
+     * Este metodo se encarga de cambiar las posiciones de lso objetos balon
+     * y canasta cuando colisionan entre si. Tambien se encarga de obstruir la
+     * salida de la canasta del JFrame.
      */
     public void checaColision() {
+        
+        // BALON VS JFRAME
         Rectangle cuadro = new Rectangle(0, 0, this.getWidth(), this.getHeight());
         if (!cuadro.intersects(balon.getPerimetro())) {
             bVelx = 0;
             bVely = 0;
             balon.setPosX(100);
             balon.setPosY(300);
+            fouls--;
             click = false;
+            if (!mute) {
+                fail.play();
+            }
         }
+        
+        // CANASTA VS BALON
         if (canasta.getPerimetro().intersects(balon.getPerimetro())) {
             bVelx = 0;
             bVely = 0;
             balon.setPosX(100);
             balon.setPosY(300);
+            score+=2;
             click = false;
+            if (!mute) {
+                goal.play();
+            }
+        }
+        
+        // CANASTA VS JFRAME
+        if(canasta.getPosX() < 5 ) {
+            cMovx = 0;
         }
     }
 
     /**
-     * Metodo que actualiza las animaciones
-     *
+     * Metodo que actualiza las animaciones.
      * @param g es la imagen del objeto
      */
     public void paint(Graphics g) {
@@ -165,7 +209,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      *
      * @param g objeto grafico
      */
-    public void paint1(Graphics g) {
+    public void paint1(Graphics g) {      
         g.drawImage(background, 0, 0, this);
         if (balon.getAnimacion() != null) {
             g.drawImage(balon.animacion.getImagen(), balon.getPosX(), balon.getPosY(), this);
@@ -173,19 +217,28 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (canasta.getAnimacion() != null) {
             g.drawImage(canasta.animacion.getImagen(), canasta.getPosX(), canasta.getPosY(), this);
         }
+        
+        //-----IMPRESION DEL TABLERO
+        g.setFont(myFont); // Aplica el estilo fuente a las string
+        g.setColor(Color.yellow);
+        g.drawString("" + score, 930, 97);
+        g.setColor(Color.red);
+        g.drawString("" + lives, 754, 98);
+        g.drawString("" + fouls, 756, 178);
+        if(pausa){
+            g.drawString("P", 943, 178);
+        }
+        
     }
 
-    /**
-     *
-     * @param e
-     */
     public void mouseReleased(MouseEvent e) {
 
     }
 
     /**
-     *
-     * @param e
+     * Evento que inicia el movimiento random del balon
+     * usando la bandera click.
+     * @param e Evento
      */
     public void mouseClicked(MouseEvent e) {
         if (!click) {
@@ -198,33 +251,23 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         }
     }
 
-    /**
-     *
-     * @param e
-     */
     public void mousePressed(MouseEvent e) {
 
     }
 
-    /**
-     *
-     * @param e
-     */
     public void mouseEntered(MouseEvent e) {
 
     }
 
-    /**
-     *
-     * @param e
-     */
     public void mouseExited(MouseEvent e) {
 
     }
 
     /**
-     *
-     * @param e
+     * Este evento se carga de activar la pausa al presionar
+     * la tecla P. Las flechas de izquierda y derecha funcionan
+     * para darle la direccion correta a la canasta.
+     * @param e Evento
      */
     public void keyPressed(KeyEvent e) {
 
@@ -239,21 +282,17 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
             cMovx = 15;
         }
+        
+        if (e.getKeyCode() == KeyEvent.VK_S) {
+            mute = !mute;
+        }
 
     }
 
-    /**
-     *
-     * @param e
-     */
     public void keyReleased(KeyEvent e) {
 
     }
 
-    /**
-     *
-     * @param e
-     */
     public void keyTyped(KeyEvent e) {
 
     }
