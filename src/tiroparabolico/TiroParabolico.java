@@ -32,11 +32,12 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     private int bVely; // Velocidad en Y del balon
     private int cMovx; // Movimiento en X de la canasta
     private int grav; // Gravedad
-    private double bAng; // Angulo de la velocidad del balon
+    private int vidas; // Vidas del usuario
+    private int score; // Score del usuario
     private boolean click; // Booleano de click
     private boolean pausa; // Booleano de pausa
     private boolean mute; // Control de sonidos
-    private int score; // Puntaje del juego
+    //private int score; // Puntaje del juego
     private int lives; // Vidas del jugador
     private int fouls; // Errores del jugador
     private Font myFont;
@@ -61,6 +62,8 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         bVelx = 0;
         bVely = 0;
         grav = 1;
+        score = 0;
+        vidas = 14;
         background = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/nba.jpg"));
 
         // Carga las imagenes de la animacion del balon
@@ -110,12 +113,12 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
 
         // Guarda el tiempo actual del sistema
         tiempoActual = System.currentTimeMillis();
-        while (true) {
-            if(!pausa){
-               checaColision();
-               actualiza();
+        while (vidas >= 0) {
+            if (!pausa) {
+                checaColision();
+                actualiza();
             }
-            repaint(); 
+            repaint();
             try {
                 Thread.sleep(50);
             } catch (InterruptedException ex) {
@@ -129,6 +132,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      * canasta.
      */
     public void actualiza() {
+        grav = 6 - vidas / 3;
         balon.setPosY(balon.getPosY() - bVely);
         if (click) { 
             bVely -= grav;
@@ -157,6 +161,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
             balon.setPosY(300);
             fouls--;
             click = false;
+            vidas--;
             if (!mute) {
                 fail.play();
             }
@@ -176,9 +181,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         }
         
         // CANASTA VS JFRAME
-        if(canasta.getPosX() < 5 ) {
-            cMovx = 0;
-        }
+        
     }
 
     /**
@@ -221,9 +224,9 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         //-----IMPRESION DEL TABLERO
         g.setFont(myFont); // Aplica el estilo fuente a las string
         g.setColor(Color.yellow);
-        g.drawString("" + score, 930, 97);
+        g.drawString("" + score, 930, 98);
         g.setColor(Color.red);
-        g.drawString("" + lives, 754, 98);
+        g.drawString("" + lives, 754, 99);
         g.drawString("" + fouls, 756, 178);
         if(pausa){
             g.drawString("P", 943, 178);
@@ -244,9 +247,11 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (!click) {
             if (balon.getPerimetro().contains(e.getPoint())) {
                 click = true;
-                bAng = (Math.random() * 60) + 15;
-                bVely = (int) (Math.sqrt(250 * 2 * grav));
-                bVelx = (int) ((650 * grav) / (bVely * 2));
+                bVely = (int) (Math.random() * (Math.sqrt(250 * 2 * grav) / 2)
+                        + (Math.sqrt(250 * 2 * grav) / 2));
+
+                bVelx = (int) ((((Math.random() * 500 / 2) + 250) * grav)
+                        / (bVely * 2));
             }
         }
     }
