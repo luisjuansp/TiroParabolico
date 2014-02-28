@@ -16,6 +16,13 @@ import java.awt.event.MouseListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.Font;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.io.IOException; 
 
 public class TiroParabolico extends JFrame implements Runnable, MouseListener, KeyListener {
 
@@ -44,6 +51,10 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     private SoundClip fail;
     private SoundClip goal;
     private SoundClip over;
+    private BufferedReader fileIn;
+    private PrintWriter fileOut;
+    private String datos;
+    private String[] arr; // Arreglo de datos
 
     /**
      * Constructor Se inicializan las variables
@@ -62,8 +73,8 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         bVelx = 0;
         bVely = 0;
         grav = 1;
-        score = 0;
         vidas = 14;
+        datos = "";
         background = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/nba.jpg"));
 
         // Carga las imagenes de la animacion del balon
@@ -133,16 +144,19 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
      */
     public void actualiza() {
         grav = 6 - vidas / 3;
-        balon.setPosY(balon.getPosY() - bVely);
-        if (click) { 
+        if (click) {
+            balon.setPosY(balon.getPosY() - bVely);
             bVely -= grav;
+            balon.setPosX(balon.getPosX() + bVelx);
+            long tiempoTranscurrido = System.currentTimeMillis() - tiempoActual;
+            tiempoActual += tiempoTranscurrido;
+            balon.getAnimacion().actualiza(tiempoTranscurrido);
         }
-        balon.setPosX(balon.getPosX() + bVelx);
-        canasta.setPosX(canasta.getPosX() + cMovx);
+        if (canasta.getPosX() + cMovx + canasta.getAncho() < this.getWidth()
+                && canasta.getPosX() + cMovx > this.getWidth() / 2) {
+            canasta.setPosX(canasta.getPosX() + cMovx);
+        }
         cMovx = 0;
-        long tiempoTranscurrido = System.currentTimeMillis() - tiempoActual;
-        tiempoActual += tiempoTranscurrido;
-        balon.getAnimacion().actualiza(tiempoTranscurrido);
     }
 
     /**
@@ -160,8 +174,12 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
             balon.setPosX(100);
             balon.setPosY(300);
             fouls--;
-            click = false;
+            if(fouls < 1) {
+                lives--;
+                fouls = 3;
+            }
             vidas--;
+            click = false;
             if (!mute) {
                 fail.play();
             }
@@ -179,8 +197,6 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
                 goal.play();
             }
         }
-        
-        // CANASTA VS JFRAME
         
     }
 
@@ -291,6 +307,22 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (e.getKeyCode() == KeyEvent.VK_S) {
             mute = !mute;
         }
+        
+        if (e.getKeyCode() == KeyEvent.VK_G) {
+           try {
+               writeFile();
+           } catch(IOException err) {
+               
+           }
+        }
+        
+        if (e.getKeyCode() == KeyEvent.VK_C) {
+           try {
+               readFile();
+           } catch(IOException err) {
+               
+           }
+        }
 
     }
 
@@ -299,7 +331,54 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     public void keyTyped(KeyEvent e) {
-
+        
+    }
+    
+    /**
+     * PENDIENTE
+     * @throws IOException 
+     */
+    public void readFile() throws IOException {
+        try {
+            fileIn = new BufferedReader(new FileReader("SaveState.txt"));
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: " + e);
+        }
+        datos = fileIn.readLine();
+        
+        
+            arr = datos.split("_");
+            pausa = Boolean.valueOf(arr[0]);
+            mute = Boolean.valueOf(arr[1]);
+            click = Boolean.valueOf(arr[2]);
+            score = (Integer.parseInt(arr[3]));
+            lives = (Integer.parseInt(arr[4]));
+            fouls = (Integer.parseInt(arr[5]));
+            bVelx = (Integer.parseInt(arr[6]));
+            bVely = (Integer.parseInt(arr[7]));
+            grav = (Integer.parseInt(arr[8]));
+            vidas = (Integer.parseInt(arr[9]));
+            balon.setPosX((Integer.parseInt(arr[10])));
+            balon.setPosY((Integer.parseInt(arr[11])));
+            canasta.setPosX((Integer.parseInt(arr[12])));
+            cMovx = (Integer.parseInt(arr[13]));
+            
+        
+        fileIn.close();
+    }
+    
+    /**
+     * 
+     * @throws IOException 
+     */
+    public void writeFile() throws IOException {
+        File archivo = new File("SaveState.txt");
+        archivo.delete();
+        fileOut = new PrintWriter(new FileWriter("SaveState.txt",true));
+        datos = "" + pausa + "_" + "" + mute + "_" + "" + click + "_" + "" + score + "_" + "" + lives + "_" + "" + fouls + "_" + "" + bVelx + "_" + "" + bVely + "_" + "" + grav + "_" + "" + vidas + "_" + "" + balon.getPosX() + "_" + "" + balon.getPosY() + "_" + "" + canasta.getPosX() + "_" + "" + cMovx;
+        fileOut.println(datos);
+        fileOut.close();
+        
     }
 
     public static void main(String[] args) {
