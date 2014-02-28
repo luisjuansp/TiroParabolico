@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.FileWriter;
-import java.io.IOException; 
+import java.io.IOException;
 
 public class TiroParabolico extends JFrame implements Runnable, MouseListener, KeyListener {
 
@@ -34,6 +34,8 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     private long tiempoInicial; // tiempo inicial
     private Image background; // Imagen de fondo de JFrame <-- Agregar Imagen
     private Image dbImage; // Imagen
+    private Image gg; // Imagen de Game Over
+    private Image ins; // Imagen de Instrucciones
     private Graphics dbg; // Objeto Grafico
     private int bVelx; // Velocidad en X del balon
     private int bVely; // Velocidad en Y del balon
@@ -43,6 +45,8 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     private int score; // Score del usuario
     private boolean click; // Booleano de click
     private boolean pausa; // Booleano de pausa
+    private boolean instruc; // Booleano para desplegar instrucciones
+    private boolean gameover; // Booleano para desplegar imagen gg
     private boolean mute; // Control de sonidos
     //private int score; // Puntaje del juego
     private int lives; // Vidas del jugador
@@ -63,6 +67,8 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         myFont = new Font("Serif", Font.BOLD, 30); // Estilo de fuente
         pausa = false;
         mute = false;
+        gameover = false;
+        instruc = false;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1008, 758);
         click = false;
@@ -76,6 +82,8 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         vidas = 14;
         datos = "";
         background = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/nba.jpg"));
+        ins = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/ins.jpg"));
+        gg = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/gg.jpg"));
 
         // Carga las imagenes de la animacion del balon
         Image b0 = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("images/b0.png"));
@@ -88,12 +96,12 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
 
         // Se crea la animacion del balon
         animBalon = new Animacion();
-        animBalon.sumaCuadro(b5, 200);
-        animBalon.sumaCuadro(b4, 200);
-        animBalon.sumaCuadro(b3, 200);
-        animBalon.sumaCuadro(b2, 200);
-        animBalon.sumaCuadro(b1, 200);
-        animBalon.sumaCuadro(b0, 200);
+        animBalon.sumaCuadro(b5, 100);
+        animBalon.sumaCuadro(b4, 100);
+        animBalon.sumaCuadro(b3, 100);
+        animBalon.sumaCuadro(b2, 100);
+        animBalon.sumaCuadro(b1, 100);
+        animBalon.sumaCuadro(b0, 100);
 
         // Se crea la animacion de la canasta
         cuadroCanasta = new Animacion();
@@ -104,12 +112,12 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
 
         //Canasta
         canasta = new Canasta(900, 680, cuadroCanasta);
-        
+
         // Se cargan los sonidos
         fail = new SoundClip("sounds/boing2.wav");
         goal = new SoundClip("sounds/bloop_x.wav");
         over = new SoundClip("sounds/buzzer_x.wav");
-        
+
         addMouseListener(this);
         addKeyListener(this);
         Thread th = new Thread(this);
@@ -117,15 +125,16 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Se ejecuta el Thread, el juego no continua si la pausa esta
-     * activada.
+     * Se ejecuta el Thread, el juego no continua si la pausa esta activada.
+     * El juego finaliza si el numero de vidas en menor o igual que 0.
+     * El juego tambien se pausa si el usuario desea ver las instrucciones.
      */
     public void run() {
 
         // Guarda el tiempo actual del sistema
         tiempoActual = System.currentTimeMillis();
         while (vidas >= 0) {
-            if (!pausa) {
+            if (!pausa && !instruc) {
                 checaColision();
                 actualiza();
             }
@@ -136,11 +145,14 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
                 System.out.println("Error en " + ex.toString());
             }
         }
+        if (vidas <= 0) {
+            gameover = true;
+            repaint();
+        }
     }
 
     /**
-     * En este metodo se actualiza las posiciones del balon y de la
-     * canasta.
+     * En este metodo se actualiza las posiciones del balon y de la canasta.
      */
     public void actualiza() {
         grav = 6 - vidas / 3;
@@ -160,12 +172,11 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Este metodo se encarga de cambiar las posiciones de lso objetos balon
-     * y canasta cuando colisionan entre si. Tambien se encarga de obstruir la
-     * salida de la canasta del JFrame.
+     * Este metodo se encarga de cambiar las posiciones de lso objetos balon y
+     * canasta cuando colisionan entre si.
      */
     public void checaColision() {
-        
+
         // BALON VS JFRAME
         Rectangle cuadro = new Rectangle(0, 0, this.getWidth(), this.getHeight());
         if (!cuadro.intersects(balon.getPerimetro())) {
@@ -174,7 +185,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
             balon.setPosX(100);
             balon.setPosY(300);
             fouls--;
-            if(fouls < 1) {
+            if (fouls < 1) {
                 lives--;
                 fouls = 3;
             }
@@ -184,70 +195,20 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
                 fail.play();
             }
         }
-        
+
         // CANASTA VS BALON
         if (canasta.getPerimetro().intersects(balon.getPerimetro())) {
             bVelx = 0;
             bVely = 0;
             balon.setPosX(100);
             balon.setPosY(300);
-            score+=2;
+            score += 2;
             click = false;
             if (!mute) {
                 goal.play();
             }
         }
-        
-    }
 
-    /**
-     * Metodo que actualiza las animaciones.
-     * @param g es la imagen del objeto
-     */
-    public void paint(Graphics g) {
-        // Inicializa el DoubleBuffer
-        if (dbImage == null) {
-            dbImage = createImage(this.getSize().width, this.getSize().height);
-            dbg = dbImage.getGraphics();
-        }
-
-        // Actualiza la imagen de fondo.
-        dbg.setColor(getBackground());
-        dbg.fillRect(0, 0, this.getSize().width, this.getSize().height);
-
-        // Actualiza el Foreground.
-        dbg.setColor(getForeground());
-        paint1(dbg);
-
-        // Dibuja la imagen actualizada
-        g.drawImage(dbImage, 0, 0, this);
-    }
-
-    /**
-     * Este metodo..
-     *
-     * @param g objeto grafico
-     */
-    public void paint1(Graphics g) {      
-        g.drawImage(background, 0, 0, this);
-        if (balon.getAnimacion() != null) {
-            g.drawImage(balon.animacion.getImagen(), balon.getPosX(), balon.getPosY(), this);
-        }
-        if (canasta.getAnimacion() != null) {
-            g.drawImage(canasta.animacion.getImagen(), canasta.getPosX(), canasta.getPosY(), this);
-        }
-        
-        //-----IMPRESION DEL TABLERO
-        g.setFont(myFont); // Aplica el estilo fuente a las string
-        g.setColor(Color.yellow);
-        g.drawString("" + score, 930, 98);
-        g.setColor(Color.red);
-        g.drawString("" + lives, 754, 99);
-        g.drawString("" + fouls, 756, 178);
-        if(pausa){
-            g.drawString("P", 943, 178);
-        }
-        
     }
 
     public void mouseReleased(MouseEvent e) {
@@ -255,8 +216,7 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Evento que inicia el movimiento random del balon
-     * usando la bandera click.
+     * Evento que inicia el movimiento random del balon usando la bandera click.
      * @param e Evento
      */
     public void mouseClicked(MouseEvent e) {
@@ -285,9 +245,10 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     /**
-     * Este evento se carga de activar la pausa al presionar
-     * la tecla P. Las flechas de izquierda y derecha funcionan
-     * para darle la direccion correta a la canasta.
+     * Este evento se carga de activar la pausa al presionar la tecla P. Las
+     * flechas de izquierda y derecha funcionan para darle la direccion correta
+     * a la canasta. La tecla I sirve para desplegar las instrucciones. Las teclas
+     * C y G se encargan de cargar y guardar el archivo "SaveState.txt"
      * @param e Evento
      */
     public void keyPressed(KeyEvent e) {
@@ -303,25 +264,35 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
             cMovx = 15;
         }
-        
+
         if (e.getKeyCode() == KeyEvent.VK_S) {
             mute = !mute;
         }
         
-        if (e.getKeyCode() == KeyEvent.VK_G) {
-           try {
-               writeFile();
-           } catch(IOException err) {
-               
-           }
+        if (e.getKeyCode() == KeyEvent.VK_I) {
+            instruc = !instruc;
         }
-        
+
+        if (e.getKeyCode() == KeyEvent.VK_G) {
+            if(!instruc) {
+               try {
+                writeFile();
+            } catch (IOException err) {
+
+            } 
+            }
+            
+        }
+
         if (e.getKeyCode() == KeyEvent.VK_C) {
-           try {
-               readFile();
-           } catch(IOException err) {
-               
-           }
+            if (!instruc) {
+                try {
+                readFile();
+            } catch (IOException err) {
+
+            }
+            }
+            
         }
 
     }
@@ -331,12 +302,13 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
     }
 
     public void keyTyped(KeyEvent e) {
-        
+
     }
-    
+
     /**
-     * PENDIENTE
-     * @throws IOException 
+     * Lee el archivo "SaveState.txt" y carga los valores de ese archivo
+     * en el juego actual.
+     * @throws IOException
      */
     public void readFile() throws IOException {
         try {
@@ -344,43 +316,100 @@ public class TiroParabolico extends JFrame implements Runnable, MouseListener, K
         } catch (FileNotFoundException e) {
             System.out.println("Error: " + e);
         }
+        
         datos = fileIn.readLine();
-        
-        
-            arr = datos.split("_");
-            pausa = Boolean.valueOf(arr[0]);
-            mute = Boolean.valueOf(arr[1]);
-            click = Boolean.valueOf(arr[2]);
-            score = (Integer.parseInt(arr[3]));
-            lives = (Integer.parseInt(arr[4]));
-            fouls = (Integer.parseInt(arr[5]));
-            bVelx = (Integer.parseInt(arr[6]));
-            bVely = (Integer.parseInt(arr[7]));
-            grav = (Integer.parseInt(arr[8]));
-            vidas = (Integer.parseInt(arr[9]));
-            balon.setPosX((Integer.parseInt(arr[10])));
-            balon.setPosY((Integer.parseInt(arr[11])));
-            canasta.setPosX((Integer.parseInt(arr[12])));
-            cMovx = (Integer.parseInt(arr[13]));
-            
-        
+        arr = datos.split("_");
+        pausa = Boolean.valueOf(arr[0]);
+        mute = Boolean.valueOf(arr[1]);
+        click = Boolean.valueOf(arr[2]);
+        score = (Integer.parseInt(arr[3]));
+        lives = (Integer.parseInt(arr[4]));
+        fouls = (Integer.parseInt(arr[5]));
+        bVelx = (Integer.parseInt(arr[6]));
+        bVely = (Integer.parseInt(arr[7]));
+        grav = (Integer.parseInt(arr[8]));
+        vidas = (Integer.parseInt(arr[9]));
+        balon.setPosX((Integer.parseInt(arr[10])));
+        balon.setPosY((Integer.parseInt(arr[11])));
+        canasta.setPosX((Integer.parseInt(arr[12])));
+        cMovx = (Integer.parseInt(arr[13]));
+
         fileIn.close();
     }
-    
+
     /**
-     * 
-     * @throws IOException 
+     * Escribe en el archivo "SaveState.txt" los valores actuales
+     * del juego.
+     * @throws IOException
      */
     public void writeFile() throws IOException {
         File archivo = new File("SaveState.txt");
         archivo.delete();
-        fileOut = new PrintWriter(new FileWriter("SaveState.txt",true));
+        fileOut = new PrintWriter(new FileWriter("SaveState.txt", true));
         datos = "" + pausa + "_" + "" + mute + "_" + "" + click + "_" + "" + score + "_" + "" + lives + "_" + "" + fouls + "_" + "" + bVelx + "_" + "" + bVely + "_" + "" + grav + "_" + "" + vidas + "_" + "" + balon.getPosX() + "_" + "" + balon.getPosY() + "_" + "" + canasta.getPosX() + "_" + "" + cMovx;
         fileOut.println(datos);
         fileOut.close();
-        
+
+    }
+    
+    
+    /**
+     * Metodo que actualiza las animaciones.
+     * @param g es la imagen del objeto
+     */
+    public void paint(Graphics g) {
+        // Inicializa el DoubleBuffer
+        if (dbImage == null) {
+            dbImage = createImage(this.getSize().width, this.getSize().height);
+            dbg = dbImage.getGraphics();
+        }
+
+        // Actualiza la imagen de fondo.
+        dbg.setColor(getBackground());
+        dbg.fillRect(0, 0, this.getSize().width, this.getSize().height);
+
+        // Actualiza el Foreground.
+        dbg.setColor(getForeground());
+        paint1(dbg);
+
+        // Dibuja la imagen actualizada
+        g.drawImage(dbImage, 0, 0, this);
     }
 
+    /**
+     * Este metodo se encarga de pintar todos los objetos graficos del juego.
+     * Se pintan los valores desplegados en el tablero
+     * @param g objeto grafico
+     */
+    public void paint1(Graphics g) {
+        g.drawImage(background, 0, 0, this);
+        if (balon.getAnimacion() != null) {
+            g.drawImage(balon.animacion.getImagen(), balon.getPosX(), balon.getPosY(), this);
+        }
+        if (canasta.getAnimacion() != null) {
+            g.drawImage(canasta.animacion.getImagen(), canasta.getPosX(), canasta.getPosY(), this);
+        }
+        
+
+        //-----IMPRESION DEL TABLERO
+        g.setFont(myFont); // Aplica el estilo fuente a las string
+        g.setColor(Color.yellow);
+        g.drawString("" + score, 930, 98);
+        g.setColor(Color.red);
+        g.drawString("" + lives, 754, 99);
+        g.drawString("" + fouls, 756, 178);
+        if (pausa) {
+            g.drawString("P", 943, 178);
+        }
+        
+        if (instruc) {
+            g.drawImage(ins, 0, 0, this);
+        }
+        if (gameover) {
+            g.drawImage(gg, 0, 0, this);
+        }
+
+    }
     public static void main(String[] args) {
         TiroParabolico tiro = new TiroParabolico();
         tiro.setVisible(true);
